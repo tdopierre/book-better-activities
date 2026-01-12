@@ -147,7 +147,10 @@ def main() -> None:
         )
         now = datetime.datetime.now(ZoneInfo("Europe/London"))
         next_run = trigger.get_next_fire_time(None, now)
-        logger.info(f"Scheduled job: {booking.name} (next run: {next_run})")
+        booking_date = next_run.date() + datetime.timedelta(days=booking.days_ahead)
+        logger.info(
+            f"Scheduled job: {booking.name} (next run: {next_run}, booking for: {booking_date})"
+        )
 
     logger.info(f"Starting scheduler with {len(config.bookings)} job(s)")
     scheduler.start()
