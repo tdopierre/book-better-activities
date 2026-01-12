@@ -16,7 +16,7 @@ bookings:
     max_slot_time: "21:00:00"
     n_slots: 2
     days_ahead: 7
-    schedule: "8 22 * * 1-5"  # 10 PM, Monday-Friday
+    schedule: "15 22 * * 1-5"  # 10 PM, Monday-Friday
 
   # Example: Weekend morning session at Britannia
   # - name: "Weekend badminton"

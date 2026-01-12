@@ -55,7 +55,10 @@ def book_activity(booking: BookingConfig) -> None:
             activity=booking.activity,
             activity_date=activity_date,
         )
-        logger.info(f"[{booking.name}] Found {len(activity_times)} activity times")
+        times_str = ", ".join(f"{t.start}-{t.end}" for t in activity_times)
+        logger.info(
+            f"[{booking.name}] Found {len(activity_times)} activity times: {times_str}"
+        )
 
         # Filter by min_slot_time
         activity_times = [s for s in activity_times if s.start >= min_slot_time]
@@ -64,8 +67,9 @@ def book_activity(booking: BookingConfig) -> None:
         if max_slot_time:
             activity_times = [s for s in activity_times if s.end <= max_slot_time]
 
+        times_str = ", ".join(f"{t.start}-{t.end}" for t in activity_times)
         logger.info(
-            f"[{booking.name}] After filtering, got {len(activity_times)} activity times"
+            f"[{booking.name}] After filtering, got {len(activity_times)} activity times: {times_str}"
         )
 
         # Find consecutive slots
