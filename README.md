@@ -127,8 +127,8 @@ docker build -t book-better-activities .
 ### Code Quality
 
 ```bash
-make lint    # Check formatting
 make format  # Auto-fix formatting
+make lint    # Check formatting
 ```
 
 ## Project Structure

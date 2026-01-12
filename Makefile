@@ -1,10 +1,10 @@
-.PHONY: lint format
+.PHONY: format lint
 
-lint:
+format:
 	uv run black .
+	uv run ruff format .
+
+lint: format
 	uv run black --check .
 	uv run ruff check .
 	uv run ruff format --check .
-
-format:
-	uv run ruff format .
