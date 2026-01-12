@@ -1,5 +1,7 @@
 # Book Better Activities
 
+[![Build](https://github.com/tdopierre/book-better-activities/actions/workflows/docker.yml/badge.svg)](https://github.com/tdopierre/book-better-activities/actions/workflows/docker.yml)
+
 An automated activity booking system for Better UK leisure facilities. This tool logs into your Better leisure account, searches for available activity slots, and automatically books them on a schedule.
 
 ## Features
@@ -9,37 +11,24 @@ An automated activity booking system for Better UK leisure facilities. This tool
 - Environment variable substitution in config
 - YAML anchors for reusable credentials
 - Automatic retry mechanism for reliable API interactions
-- Docker containerization for easy deployment
 
-## Requirements
+## Quick Start
 
-- Python 3.12+
-- A Better UK leisure account with credits
+1. Create a `config.yaml` file (see [Configuration](#configuration))
 
-## Installation
-
-1. Clone the repository:
+2. Run with Docker:
    ```bash
-   git clone <repository-url>
-   cd book-better-activities
+   docker run -d \
+     -e BETTER_USERNAME=your_username \
+     -e BETTER_PASSWORD=your_password \
+     -v /path/to/config.yaml:/app/config.yaml \
+     --name better-booker \
+     ghcr.io/tdopierre/book-better-activities:latest
    ```
-
-2. Install dependencies using [uv](https://github.com/astral-sh/uv):
-   ```bash
-   uv sync
-   ```
-
-3. Set environment variables for your Better account:
-   ```bash
-   export BETTER_USERNAME=your_username
-   export BETTER_PASSWORD=your_password
-   ```
-
-4. Configure your bookings in `config.yaml`
 
 ## Configuration
 
-Edit `config.yaml` to define your booking jobs:
+Create a `config.yaml` file to define your booking jobs:
 
 ```yaml
 # Shared credentials using YAML anchors
@@ -67,7 +56,7 @@ bookings:
     schedule: "0 9 * * 6"      # Cron: 9 AM, Saturday
 ```
 
-### Configuration Options
+### Options
 
 | Option | Description | Example |
 |--------|-------------|---------|
@@ -98,38 +87,44 @@ password: <BETTER_PASSWORD>   # Replaced with $BETTER_PASSWORD value
 
 - `badminton-40min`
 
-## Usage
+## How It Works
+
+1. **Config Loading**: Reads `config.yaml`, substitutes environment variables, and validates with Pydantic
+2. **Scheduling**: APScheduler sets up cron triggers for each booking job
+3. **Authentication**: Logs into the Better API with credentials and obtains a JWT token
+4. **Search**: Fetches available activity times for the target date (N days in advance)
+5. **Filter**: Filters slots by time and availability
+6. **Book**: Adds selected slots to cart and completes checkout using account credits
+
+## Development
+
+### Local Setup
+
+```bash
+git clone https://github.com/tdopierre/book-better-activities.git
+cd book-better-activities
+uv sync
+```
 
 ### Run Locally
 
 ```bash
+export BETTER_USERNAME=your_username
+export BETTER_PASSWORD=your_password
 uv run python src/scripts/book-activity.py
 ```
 
-The scheduler will start and execute booking jobs according to their cron schedules.
-
-### Docker Deployment
+### Build Docker Image
 
 ```bash
-# Build the image
 docker build -t book-better-activities .
-
-# Run with environment variables
-docker run -d \
-  -e BETTER_USERNAME=your_username \
-  -e BETTER_PASSWORD=your_password \
-  --name better-booker \
-  book-better-activities
 ```
 
-Or mount a custom config:
+### Code Quality
+
 ```bash
-docker run -d \
-  -e BETTER_USERNAME=your_username \
-  -e BETTER_PASSWORD=your_password \
-  -v /path/to/config.yaml:/app/config.yaml \
-  --name better-booker \
-  book-better-activities
+make lint    # Check formatting
+make format  # Auto-fix formatting
 ```
 
 ## Project Structure
@@ -149,27 +144,6 @@ book-better-activities/
 ├── pyproject.toml              # Project dependencies
 ├── Dockerfile                  # Container configuration
 └── uv.lock                     # Dependency lock file
-```
-
-## How It Works
-
-1. **Config Loading**: Reads `config.yaml`, substitutes environment variables, and validates with Pydantic
-2. **Scheduling**: APScheduler sets up cron triggers for each booking job
-3. **Authentication**: Logs into the Better API with credentials and obtains a JWT token
-4. **Search**: Fetches available activity times for the target date (N days in advance)
-5. **Filter**: Filters slots by time and availability
-6. **Book**: Adds selected slots to cart and completes checkout using account credits
-
-## Development
-
-### Code Quality
-
-```bash
-# Format with black
-black .
-
-# Lint with ruff
-ruff check .
 ```
 
 ## License
