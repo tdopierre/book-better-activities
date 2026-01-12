@@ -3,8 +3,8 @@ import datetime
 import logging
 import os
 
+from src.booking import book_activity_slots
 from src.config import BookingConfig
-from src.scripts.book_activity import book_activity
 
 logging.basicConfig(
     level=logging.INFO,
@@ -53,7 +53,7 @@ def main():
     logger.info(
         f"Booking {args.n_slots} slot(s) at {args.venue} for {args.activity} on {args.date}"
     )
-    book_activity(booking=booking, activity_date=activity_date, name="one-shot")
+    book_activity_slots(booking=booking, activity_date=activity_date, name="one-shot")
     logger.info("Booking complete!")
 
 

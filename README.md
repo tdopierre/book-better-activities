@@ -135,7 +135,7 @@ uv sync
 ```bash
 export BETTER_USERNAME=your_username
 export BETTER_PASSWORD=your_password
-uv run python src/scripts/book_activity.py
+uv run python src/scripts/scheduled_booking.py
 ```
 
 ### Build Docker Image
@@ -155,19 +155,24 @@ make lint    # Check formatting
 
 ```
 book-better-activities/
-├── src/
-│   ├── clients/
-│   │   └── better_client.py    # API client for Better.org.uk
-│   ├── scripts/
-│   │   └── book_activity.py    # Main scheduler entry point
-│   ├── config.py               # YAML config loader
-│   ├── exceptions.py           # Custom exceptions
-│   ├── logging.py              # Logging utilities
-│   └── models.py               # Data models (Pydantic)
+├── Dockerfile                  # Container configuration
+├── Makefile
 ├── config.yaml                 # Booking configuration
 ├── pyproject.toml              # Project dependencies
-├── Dockerfile                  # Container configuration
-└── uv.lock                     # Dependency lock file
+├── uv.lock                     # Dependency lock file
+└── src/
+    ├── booking.py              # Core booking logic
+    ├── clients/
+    │   └── better_client.py    # API client for Better.org.uk
+    ├── config.py               # YAML config loader
+    ├── exceptions.py           # Custom exceptions
+    ├── logging.py              # Logging utilities
+    ├── models.py               # Data models (Pydantic)
+    ├── scripts/
+    │   ├── book_now.py         # One-shot booking script
+    │   ├── list_slots.py       # List available slots script
+    │   └── scheduled_booking.py # Main scheduler entry point
+    └── __init__.py             # Python package initializer
 ```
 
 ## License
