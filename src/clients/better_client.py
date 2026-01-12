@@ -51,9 +51,16 @@ class LiveBetterClient:
         self.username = username
         self.password = password
 
+        retry = Retry(
+            total=5,
+            backoff_factor=1.0,
+            status_forcelist=[500, 502, 503, 504],
+            allowed_methods=["GET", "POST"],
+        )
         self.client = httpx.Client(
             base_url="https://better-admin.org.uk/api/",
-            transport=RetryTransport(retry=Retry(total=5, backoff_factor=0.5)),
+            transport=RetryTransport(retry=retry),
+            timeout=30.0,
         )
         self.client.headers.update(self.HEADERS)
 
