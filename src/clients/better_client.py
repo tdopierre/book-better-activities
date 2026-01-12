@@ -21,7 +21,9 @@ type _LiveBetterClientInstanceMethod[**P, R] = Callable[
 
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 
 
 def _requires_authentication[**P, R](

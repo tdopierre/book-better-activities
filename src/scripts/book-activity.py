@@ -1,5 +1,6 @@
 import datetime
 import logging
+from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -79,6 +80,31 @@ def validate_credentials(bookings: list[BookingConfig]) -> None:
         logger.info(f"Credentials valid for {booking.username}")
 
 
+def convert_cron_dow_to_apscheduler(dow: str) -> str:
+    """Convert standard cron day-of-week to APScheduler format.
+
+    Standard cron: 0=Sun, 1=Mon, ..., 6=Sat
+    APScheduler:   0=Mon, 1=Tue, ..., 6=Sun
+    """
+    # Map cron DOW (0-6, Sun-Sat) to APScheduler (0-6, Mon-Sun)
+    cron_to_aps = {0: 6, 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6}
+
+    def convert_single(val: str) -> str:
+        if val == "*":
+            return val
+        return str(cron_to_aps[int(val)])
+
+    # Handle ranges like "1-5"
+    if "-" in dow:
+        start, end = dow.split("-")
+        return f"{convert_single(start)}-{convert_single(end)}"
+    # Handle lists like "1,3,5"
+    elif "," in dow:
+        return ",".join(convert_single(v) for v in dow.split(","))
+    else:
+        return convert_single(dow)
+
+
 def parse_cron_expression(cron_expr: str) -> dict:
     """Parse a cron expression into APScheduler CronTrigger kwargs."""
     parts = cron_expr.split()
@@ -91,7 +117,7 @@ def parse_cron_expression(cron_expr: str) -> dict:
         "hour": hour,
         "day": day,
         "month": month,
-        "day_of_week": day_of_week,
+        "day_of_week": convert_cron_dow_to_apscheduler(day_of_week),
     }
 
 
@@ -110,7 +136,7 @@ def main() -> None:
 
     for booking in config.bookings:
         cron_kwargs = parse_cron_expression(booking.schedule)
-        trigger = CronTrigger(**cron_kwargs)
+        trigger = CronTrigger(**cron_kwargs, timezone="Europe/London")
 
         scheduler.add_job(
             book_activity,
@@ -119,7 +145,9 @@ def main() -> None:
             id=booking.name,
             name=booking.name,
         )
-        logger.info(f"Scheduled job: {booking.name} with schedule: {booking.schedule}")
+        now = datetime.datetime.now(ZoneInfo("Europe/London"))
+        next_run = trigger.get_next_fire_time(None, now)
+        logger.info(f"Scheduled job: {booking.name} (next run: {next_run})")
 
     logger.info(f"Starting scheduler with {len(config.bookings)} job(s)")
     scheduler.start()
