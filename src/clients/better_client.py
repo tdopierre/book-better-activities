@@ -11,12 +11,9 @@ import httpx
 from src.models import (
     ActivityCart,
     ActivitySlot,
-    BetterActivity,
-    BetterVenue,
     ActivityTime,
 )
 from src.logging import log_method_inputs_and_outputs
-from src.config import app_config
 
 type _LiveBetterClientInstanceMethod[**P, R] = Callable[
     Concatenate[LiveBetterClient, P], R
@@ -87,14 +84,14 @@ class LiveBetterClient:
     @log_method_inputs_and_outputs
     def get_available_slots_for(
         self,
-        venue: BetterVenue,
-        activity: BetterActivity,
+        venue: str,
+        activity: str,
         activity_date: datetime.date,
         start_time: datetime.time,
         end_time: datetime.time,
     ) -> list[ActivitySlot]:
         response = self.client.get(
-            f"activities/venue/{venue.value}/activity/{activity.value}/slots",
+            f"activities/venue/{venue}/activity/{activity}/slots",
             params={
                 "date": activity_date.strftime("%Y-%m-%d"),
                 "start_time": start_time.strftime("%H:%M"),
@@ -120,10 +117,10 @@ class LiveBetterClient:
     @_requires_authentication
     @log_method_inputs_and_outputs
     def get_available_times_for(
-        self, venue: BetterVenue, activity: BetterActivity, activity_date: datetime.date
+        self, venue: str, activity: str, activity_date: datetime.date
     ) -> list[ActivityTime]:
         response = self.client.get(
-            f"activities/venue/{venue.value}/activity/{activity.value}/times",
+            f"activities/venue/{venue}/activity/{activity}/times",
             params={"date": activity_date.strftime("%Y-%m-%d")},
         )
         response.raise_for_status()
@@ -203,11 +200,6 @@ class LiveBetterClient:
         return complete_checkout_response.json()["complete_order_id"]
 
 
-def get_client() -> LiveBetterClient:
-    """Get client."""
-    config = app_config
-    client = LiveBetterClient(
-        username=config.better_username,
-        password=config.better_password.get_secret_value(),
-    )
-    return client
+def get_client(username: str, password: str) -> LiveBetterClient:
+    """Get client with credentials."""
+    return LiveBetterClient(username=username, password=password)

@@ -1,0 +1,28 @@
+# Book Better Activities Configuration
+# Environment variables can be referenced using <ENV_VAR> syntax
+
+# Shared credentials (use YAML anchors for reuse)
+credentials: &credentials
+  username: <BETTER_USERNAME>
+  password: <BETTER_PASSWORD>
+
+bookings:
+  # Weekday evening badminton at Queensbridge
+  - name: "Weekday evening badminton"
+    <<: *credentials
+    venue: queensbridge-sports-community-centre
+    activity: badminton-40min
+    min_slot_time: "18:00:00"
+    n_slots: 2
+    days_ahead: 4
+    schedule: "0 22 * * 1-5"  # 10 PM, Monday-Friday
+
+  # Example: Weekend morning session at Britannia
+  # - name: "Weekend badminton"
+  #   <<: *credentials
+  #   venue: britannia-leisure-centre
+  #   activity: badminton-40min
+  #   min_slot_time: "10:00:00"
+  #   n_slots: 2
+  #   days_ahead: 4
+  #   schedule: "0 9 * * 6"  # 9 AM, Saturday

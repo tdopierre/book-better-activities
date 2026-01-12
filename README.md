@@ -1,14 +1,14 @@
 # Book Better Activities
 
-An automated activity booking system for Better UK leisure facilities. This tool logs into your Better leisure account, searches for available activity slots, and automatically books them.
+An automated activity booking system for Better UK leisure facilities. This tool logs into your Better leisure account, searches for available activity slots, and automatically books them on a schedule.
 
 ## Features
 
-- Automated booking of badminton sessions (40-minute slots)
-- Configurable venue, activity type, and time filters
-- Book multiple consecutive slots in one operation
+- YAML-based configuration for multiple booking jobs
+- Built-in scheduler with cron expressions (no system cron required)
+- Environment variable substitution in config
+- YAML anchors for reusable credentials
 - Automatic retry mechanism for reliable API interactions
-- Scheduled execution via cron for hands-free booking
 - Docker containerization for easy deployment
 
 ## Requirements
@@ -29,34 +29,65 @@ An automated activity booking system for Better UK leisure facilities. This tool
    uv sync
    ```
 
-3. Create a `.env` file with your Better account credentials:
+3. Set environment variables for your Better account:
    ```bash
-   BETTER_USERNAME=your_username
-   BETTER_PASSWORD=your_password
+   export BETTER_USERNAME=your_username
+   export BETTER_PASSWORD=your_password
    ```
 
-## Usage
+4. Configure your bookings in `config.yaml`
 
-### Command Line
+## Configuration
 
-Run the booking script with the desired parameters:
+Edit `config.yaml` to define your booking jobs:
 
-```bash
-typer src/scripts/book-activity.py run \
-  --venue queensbridge-sports-community-centre \
-  --activity badminton-40min \
-  --min-slot-time 18:00:00 \
-  --n-slots 2
+```yaml
+# Shared credentials using YAML anchors
+credentials: &credentials
+  username: <BETTER_USERNAME>  # Reads from environment
+  password: <BETTER_PASSWORD>  # Reads from environment
+
+bookings:
+  - name: "Weekday evening badminton"
+    <<: *credentials           # Merge shared credentials
+    venue: queensbridge-sports-community-centre
+    activity: badminton-40min
+    min_slot_time: "18:00:00"
+    n_slots: 2
+    days_ahead: 4
+    schedule: "0 22 * * 1-5"   # Cron: 10 PM, Mon-Fri
+
+  - name: "Weekend badminton"
+    <<: *credentials
+    venue: britannia-leisure-centre
+    activity: badminton-40min
+    min_slot_time: "10:00:00"
+    n_slots: 2
+    days_ahead: 4
+    schedule: "0 9 * * 6"      # Cron: 9 AM, Saturday
 ```
 
-### Options
+### Configuration Options
 
 | Option | Description | Example |
 |--------|-------------|---------|
-| `--venue` | Target leisure venue | `queensbridge-sports-community-centre` |
-| `--activity` | Activity type to book | `badminton-40min` |
-| `--min-slot-time` | Minimum time filter (HH:MM:SS) | `18:00:00` |
-| `--n-slots` | Number of consecutive slots to book | `2` |
+| `name` | Unique name for the booking job | `"Weekday badminton"` |
+| `username` | Better account username (or `<ENV_VAR>`) | `<BETTER_USERNAME>` |
+| `password` | Better account password (or `<ENV_VAR>`) | `<BETTER_PASSWORD>` |
+| `venue` | Venue slug | `queensbridge-sports-community-centre` |
+| `activity` | Activity slug | `badminton-40min` |
+| `min_slot_time` | Minimum time filter (HH:MM:SS) | `"18:00:00"` |
+| `n_slots` | Number of consecutive slots to book | `2` |
+| `days_ahead` | Days in advance to book | `4` |
+| `schedule` | Cron expression for scheduling | `"0 22 * * 1-5"` |
+
+### Environment Variable Substitution
+
+Use `<ENV_VAR>` syntax to reference environment variables:
+```yaml
+username: <BETTER_USERNAME>   # Replaced with $BETTER_USERNAME value
+password: <BETTER_PASSWORD>   # Replaced with $BETTER_PASSWORD value
+```
 
 ### Supported Venues
 
@@ -67,37 +98,39 @@ typer src/scripts/book-activity.py run \
 
 - `badminton-40min`
 
-## Docker Deployment
+## Usage
 
-Build and run with Docker for scheduled automated booking:
+### Run Locally
+
+```bash
+uv run python src/scripts/book-activity.py
+```
+
+The scheduler will start and execute booking jobs according to their cron schedules.
+
+### Docker Deployment
 
 ```bash
 # Build the image
 docker build -t book-better-activities .
 
-# Run the container
-docker run -d --name better-booker book-better-activities
+# Run with environment variables
+docker run -d \
+  -e BETTER_USERNAME=your_username \
+  -e BETTER_PASSWORD=your_password \
+  --name better-booker \
+  book-better-activities
 ```
 
-The container runs a cron job that executes bookings every weekday at 22:00 (10 PM).
-
-## Configuration
-
-### Environment Variables
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `BETTER_USERNAME` | Your Better account username | Yes |
-| `BETTER_PASSWORD` | Your Better account password | Yes |
-
-### Cron Schedule
-
-The default cron schedule (in `test.crontab`) runs:
-- Every weekday (Monday-Friday) at 22:00
-- Books 2 consecutive badminton slots at Queensbridge
-- Filters for slots starting at 18:00 or later
-
-Modify `test.crontab` to customize the schedule.
+Or mount a custom config:
+```bash
+docker run -d \
+  -e BETTER_USERNAME=your_username \
+  -e BETTER_PASSWORD=your_password \
+  -v /path/to/config.yaml:/app/config.yaml \
+  --name better-booker \
+  book-better-activities
+```
 
 ## Project Structure
 
@@ -107,30 +140,29 @@ book-better-activities/
 │   ├── clients/
 │   │   └── better_client.py    # API client for Better.org.uk
 │   ├── scripts/
-│   │   └── book-activity.py    # CLI entry point
-│   ├── config.py               # Settings management
+│   │   └── book-activity.py    # Main scheduler entry point
+│   ├── config.py               # YAML config loader
 │   ├── exceptions.py           # Custom exceptions
 │   ├── logging.py              # Logging utilities
 │   └── models.py               # Data models (Pydantic)
-├── main.py                     # Root entry point
+├── config.yaml                 # Booking configuration
 ├── pyproject.toml              # Project dependencies
 ├── Dockerfile                  # Container configuration
-├── test.crontab                # Cron job schedule
 └── uv.lock                     # Dependency lock file
 ```
 
 ## How It Works
 
-1. **Authentication**: Logs into the Better API with your credentials and obtains a JWT token
-2. **Search**: Fetches available activity times for the target date (4 days in advance)
-3. **Filter**: Filters slots by time, availability, and existing bookings
-4. **Book**: Adds selected slots to cart and completes checkout using account credits
+1. **Config Loading**: Reads `config.yaml`, substitutes environment variables, and validates with Pydantic
+2. **Scheduling**: APScheduler sets up cron triggers for each booking job
+3. **Authentication**: Logs into the Better API with credentials and obtains a JWT token
+4. **Search**: Fetches available activity times for the target date (N days in advance)
+5. **Filter**: Filters slots by time and availability
+6. **Book**: Adds selected slots to cart and completes checkout using account credits
 
 ## Development
 
 ### Code Quality
-
-Format and lint the code:
 
 ```bash
 # Format with black

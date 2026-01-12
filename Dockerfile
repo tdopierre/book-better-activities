@@ -1,24 +1,20 @@
 FROM python:3.12-slim
 
-# Update
-RUN apt-get update
-RUN apt-get -y install cron
+# Install uv
 RUN python3 -m pip install uv
 
 # Set up working dir
 WORKDIR /app
-COPY . /app
+COPY pyproject.toml uv.lock ./
 
-# Install reqs
+# Install dependencies
 RUN uv sync
-# RUN source .venv/bin/activate
-ENV PYTHONPATH="$PYTHONPATH:/app"
 
-# CRON
-COPY test.crontab /etc/cron.d/crontab
-RUN chmod 0644 /etc/cron.d/crontab
-RUN /usr/bin/crontab /etc/cron.d/crontab
+# Copy application code
+COPY src/ ./src/
+COPY config.yaml ./
 
-# CMD [".venv/bin/python", "src/clients/better_client.py"]
-# run crond as main process of container
-CMD ["cron", "-f"]
+ENV PYTHONPATH="/app"
+
+# Run the scheduler
+CMD ["uv", "run", "python", "src/scripts/book-activity.py"]

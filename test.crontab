@@ -1,4 +1,0 @@
-# START CRON JOB
-# At 22:00, every weekday
-0 22 * * 1-5 cd /app && PYTHONPATH=. typer src/scripts/book-activity.py run --venue queensbridge-sports-community-centre --activity badminton-40min --min-slot-time 18:00:00 --n-slots 2 > /proc/1/fd/1 2>/proc/1/fd/2
-# END CRON JOB
