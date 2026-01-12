@@ -14,6 +14,11 @@ class ActivitySlot(BaseModel):
 class ActivityTime(BaseModel):
     start: datetime.time
     end: datetime.time
+    name: str
+    location: str
+    spaces: int
+    price: str | None
+    duration: str
 
 
 class ActivityCart(BaseModel):

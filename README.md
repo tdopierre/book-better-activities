@@ -37,7 +37,7 @@ docker run --rm \
   -e BETTER_USERNAME=your_username \
   -e BETTER_PASSWORD=your_password \
   ghcr.io/tdopierre/book-better-activities:latest \
-  uv run python src/scripts/book-now.py \
+  uv run python src/scripts/book_now.py \
     --venue queensbridge-sports-community-centre \
     --activity badminton-40min \
     --date 2026-01-19 \
@@ -135,7 +135,7 @@ uv sync
 ```bash
 export BETTER_USERNAME=your_username
 export BETTER_PASSWORD=your_password
-uv run python src/scripts/book-activity.py
+uv run python src/scripts/book_activity.py
 ```
 
 ### Build Docker Image
@@ -159,7 +159,7 @@ book-better-activities/
 │   ├── clients/
 │   │   └── better_client.py    # API client for Better.org.uk
 │   ├── scripts/
-│   │   └── book-activity.py    # Main scheduler entry point
+│   │   └── book_activity.py    # Main scheduler entry point
 │   ├── config.py               # YAML config loader
 │   ├── exceptions.py           # Custom exceptions
 │   ├── logging.py              # Logging utilities

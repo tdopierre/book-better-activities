@@ -134,6 +134,8 @@ class LiveBetterClient:
         )
         response.raise_for_status()
 
+        data = response.json()["data"]
+        logger.info(data)
         return [
             ActivityTime(
                 start=datetime.datetime.strptime(
@@ -142,8 +144,13 @@ class LiveBetterClient:
                 end=datetime.datetime.strptime(
                     time_["ends_at"]["format_24_hour"], "%H:%M"
                 ).time(),
+                name=time_["name"],
+                location=time_["location"],
+                spaces=time_["spaces"],
+                price=time_["price"]["formatted_amount"],
+                duration=time_["duration"],
             )
-            for time_ in response.json()["data"]
+            for time_ in data
             if time_["spaces"] > 0 and time_["booking"] is None
         ]
 
