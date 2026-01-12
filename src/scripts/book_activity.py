@@ -83,7 +83,7 @@ def book_activity(
             f"{consecutive_slots[0].start} - {consecutive_slots[-1].end}"
         )
 
-        cart = None
+        slots_to_book = []
         for activity_time in consecutive_slots:
             slots = client.get_available_slots_for(
                 venue=booking.venue,
@@ -92,9 +92,10 @@ def book_activity(
                 start_time=activity_time.start,
                 end_time=activity_time.end,
             )
-            cart = client.add_to_cart(slots[0])
+            slots_to_book.append(slots[0])
 
-        if cart:
+        if slots_to_book:
+            cart = client.add_to_cart(slots_to_book)
             order_id = client.checkout_with_benefit(cart=cart)
             logger.info(f"[{name}] Successfully booked! Order ID: {order_id}")
 

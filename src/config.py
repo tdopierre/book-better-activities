@@ -3,14 +3,14 @@ import re
 from pathlib import Path
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretStr
 
 
 class BookingConfig(BaseModel):
     """Config to book one activity."""
 
     username: str = Field(description="Better account username")
-    password: str = Field(description="Better account password")
+    password: SecretStr = Field(description="Better account password")
     venue: str = Field(description="Venue slug")
     activity: str = Field(description="Activity slug")
     min_slot_time: str = Field(description="Minimum slot time (HH:MM:SS)")

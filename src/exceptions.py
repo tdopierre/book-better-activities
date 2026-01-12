@@ -1,9 +1,9 @@
 """All exceptions."""
 
 
-class NoSlotFound(BaseException):
+class NoSlotFound(Exception):
     """Raised when no slot is found."""
 
 
-class NotEnoughSlotsFound(BaseException):
+class NotEnoughSlotsFound(Exception):
     """Raised when no enough slots are found."""

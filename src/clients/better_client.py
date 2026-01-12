@@ -6,6 +6,7 @@ import logging
 from collections.abc import Callable
 from typing import Concatenate
 
+from pydantic import SecretStr
 from httpx_retries import RetryTransport, Retry
 import httpx
 from src.models import (
@@ -47,7 +48,7 @@ class LiveBetterClient:
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0",
     }
 
-    def __init__(self, username: str, password: str):
+    def __init__(self, username: str, password: SecretStr):
         self.username = username
         self.password = password
 
@@ -80,9 +81,12 @@ class LiveBetterClient:
 
     @log_method_inputs_and_outputs
     def authenticate(self) -> None:
+        logger.info(f"Authenticating user {self.username}...")
         auth_response = self.client.post(
             "auth/customer/login",
-            json=dict(username=self.username, password=self.password),
+            json=dict(
+                username=self.username, password=self.password.get_secret_value()
+            ),
         )
         auth_response.raise_for_status()
 
@@ -156,7 +160,7 @@ class LiveBetterClient:
 
     @_requires_authentication
     @log_method_inputs_and_outputs
-    def add_to_cart(self, slot: ActivitySlot) -> ActivityCart:
+    def add_to_cart(self, slots: list[ActivitySlot]) -> ActivityCart:
         response = self.client.post(
             "activities/cart/add",
             json=dict(
@@ -168,6 +172,7 @@ class LiveBetterClient:
                         pricing_option_id=slot.pricing_option_id,
                         type=slot.cart_type,
                     )
+                    for slot in slots
                 ],
                 membership_user_id=self.membership_user_id,
                 selected_user_id=None,
@@ -216,6 +221,6 @@ class LiveBetterClient:
         return complete_checkout_response.json()["complete_order_id"]
 
 
-def get_client(username: str, password: str) -> LiveBetterClient:
+def get_client(username: str, password: SecretStr) -> LiveBetterClient:
     """Get client with credentials."""
     return LiveBetterClient(username=username, password=password)

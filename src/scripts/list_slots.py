@@ -3,6 +3,7 @@ import datetime
 import logging
 import os
 
+from pydantic import SecretStr
 from src.clients.better_client import get_client
 
 logging.basicConfig(
@@ -27,7 +28,7 @@ def main():
 
     activity_date = datetime.date.fromisoformat(args.date)
 
-    client = get_client(username=username, password=password)
+    client = get_client(username=username, password=SecretStr(password))
 
     activity_times = client.get_available_times_for(
         venue=args.venue,
