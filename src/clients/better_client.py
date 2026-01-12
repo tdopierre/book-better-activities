@@ -14,7 +14,6 @@ from src.models import (
     ActivitySlot,
     ActivityTime,
 )
-from src.logging import log_method_inputs_and_outputs
 
 type _LiveBetterClientInstanceMethod[**P, R] = Callable[
     Concatenate[LiveBetterClient, P], R
@@ -44,8 +43,16 @@ def _requires_authentication[**P, R](
 
 class LiveBetterClient:
     HEADERS = {
-        "Origin": "https://bookings.better.org.uk",
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:146.0) Gecko/20100101 Firefox/146.0",
+        "Accept": "application/json",
+        "Accept-Language": "en-GB,en;q=0.5",
+        # 'Accept-Encoding': 'gzip, deflate, br, zstd',
+        "Content-Type": "application/json",
+        "Origin": "https://myaccount.better.org.uk",
+        "Connection": "keep-alive",
+        "Referer": "https://myaccount.better.org.uk/",
+        # Requests doesn't support trailers
+        # 'TE': 'trailers',
     }
 
     def __init__(self, username: str, password: SecretStr):
@@ -66,20 +73,17 @@ class LiveBetterClient:
         self.client.headers.update(self.HEADERS)
 
     @property
-    @log_method_inputs_and_outputs
     def authenticated(self) -> bool:
         return bool(self.client.headers.get("Authorization"))
 
     @functools.cached_property
     @_requires_authentication
-    @log_method_inputs_and_outputs
     def membership_user_id(self) -> int:
         response = self.client.get("auth/user")
         response.raise_for_status()
 
         return response.json()["data"]["membership_user"]["id"]
 
-    @log_method_inputs_and_outputs
     def authenticate(self) -> None:
         logger.info(f"Authenticating user {self.username}...")
         auth_response = self.client.post(
@@ -94,7 +98,6 @@ class LiveBetterClient:
         self.client.headers.update({"Authorization": f"Bearer {token}"})
 
     @_requires_authentication
-    @log_method_inputs_and_outputs
     def get_available_slots_for(
         self,
         venue: str,
@@ -128,7 +131,6 @@ class LiveBetterClient:
         ]
 
     @_requires_authentication
-    @log_method_inputs_and_outputs
     def get_available_times_for(
         self, venue: str, activity: str, activity_date: datetime.date
     ) -> list[ActivityTime]:
@@ -159,7 +161,6 @@ class LiveBetterClient:
         ]
 
     @_requires_authentication
-    @log_method_inputs_and_outputs
     def add_to_cart(self, slots: list[ActivitySlot]) -> ActivityCart:
         response = self.client.post(
             "activities/cart/add",
@@ -189,7 +190,6 @@ class LiveBetterClient:
         )
 
     @_requires_authentication
-    @log_method_inputs_and_outputs
     def checkout_with_benefit(self, cart: ActivityCart) -> int:
         # When need to use credit
         if cart.amount:

@@ -33,16 +33,14 @@ An automated activity booking system for Better UK leisure facilities. This tool
 Book immediately without a config file:
 
 ```bash
-docker run --rm \
-  -e BETTER_USERNAME=your_username \
-  -e BETTER_PASSWORD=your_password \
+docker run --rm --env-file .env \
   ghcr.io/tdopierre/book-better-activities:latest \
   uv run python src/scripts/book_now.py \
     --venue queensbridge-sports-community-centre \
     --activity badminton-40min \
     --date 2026-01-19 \
-    --min-slot-time 18:00:00 \
-    --max-slot-time 21:00:00 \
+    --min-slot-time 16:40:00 \
+    --max-slot-time 19:20:00 \
     --n-slots 2
 ```
 
