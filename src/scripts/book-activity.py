@@ -64,6 +64,21 @@ def book_activity(booking: BookingConfig) -> None:
         raise
 
 
+def validate_credentials(bookings: list[BookingConfig]) -> None:
+    """Validate all unique credential pairs at startup."""
+    seen = set()
+    for booking in bookings:
+        key = (booking.username, booking.password)
+        if key in seen:
+            continue
+        seen.add(key)
+
+        logger.info(f"Validating credentials for {booking.username}...")
+        client = get_client(username=booking.username, password=booking.password)
+        client.authenticate()
+        logger.info(f"Credentials valid for {booking.username}")
+
+
 def parse_cron_expression(cron_expr: str) -> dict:
     """Parse a cron expression into APScheduler CronTrigger kwargs."""
     parts = cron_expr.split()
@@ -87,6 +102,9 @@ def main() -> None:
     if not config.bookings:
         logger.warning("No bookings configured in config.yaml")
         return
+
+    # Validate credentials before starting scheduler
+    validate_credentials(config.bookings)
 
     scheduler = BlockingScheduler()
 
