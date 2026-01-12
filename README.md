@@ -155,24 +155,24 @@ make lint    # Check formatting
 
 ```
 book-better-activities/
-├── Dockerfile                  # Container configuration
+├── Dockerfile                   # Container configuration
 ├── Makefile
-├── config.yaml                 # Booking configuration
-├── pyproject.toml              # Project dependencies
-├── uv.lock                     # Dependency lock file
+├── config.yaml                  # Booking configuration
+├── pyproject.toml               # Project dependencies
+├── uv.lock                      # Dependency lock file
 └── src/
-    ├── booking.py              # Core booking logic
+    ├── booking.py               # Core booking logic
     ├── clients/
-    │   └── better_client.py    # API client for Better.org.uk
-    ├── config.py               # YAML config loader
-    ├── exceptions.py           # Custom exceptions
-    ├── logging.py              # Logging utilities
-    ├── models.py               # Data models (Pydantic)
+    │   └── better_client.py     # API client for Better.org.uk
+    ├── config.py                # YAML config loader
+    ├── exceptions.py            # Custom exceptions
+    ├── logging.py               # Logging utilities
+    ├── models.py                # Data models (Pydantic)
     ├── scripts/
-    │   ├── book_now.py         # One-shot booking script
-    │   ├── list_slots.py       # List available slots script
+    │   ├── book_now.py          # One-shot booking script
+    │   ├── list_slots.py        # List available slots script
     │   └── scheduled_booking.py # Main scheduler entry point
-    └── __init__.py             # Python package initializer
+    └── __init__.py              # Python package initializer
 ```
 
 ## License
