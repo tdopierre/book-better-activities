@@ -15,6 +15,9 @@ class BookingConfig(BaseModel):
     venue: str = Field(description="Venue slug")
     activity: str = Field(description="Activity slug")
     min_slot_time: str = Field(description="Minimum slot time (HH:MM:SS)")
+    max_slot_time: str | None = Field(
+        default=None, description="Maximum slot time (HH:MM:SS)"
+    )
     n_slots: int = Field(default=1, description="Number of consecutive slots to book")
     days_ahead: int = Field(default=4, description="Days ahead to book")
     schedule: str = Field(description="Cron expression for scheduling")

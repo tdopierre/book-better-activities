@@ -16,6 +16,23 @@ logging.basicConfig(
 )
 
 
+def find_consecutive_slots(activity_times: list, n_slots: int) -> list | None:
+    """Find n consecutive slots where each slot starts when the previous ends."""
+    if len(activity_times) < n_slots:
+        return None
+
+    for i in range(len(activity_times) - n_slots + 1):
+        candidate = activity_times[i : i + n_slots]
+        is_consecutive = all(
+            candidate[j].end == candidate[j + 1].start
+            for j in range(len(candidate) - 1)
+        )
+        if is_consecutive:
+            return candidate
+
+    return None
+
+
 def book_activity(booking: BookingConfig) -> None:
     """Execute a single booking job."""
     logger.info(f"Starting booking job: {booking.name}")
@@ -25,6 +42,11 @@ def book_activity(booking: BookingConfig) -> None:
             days=booking.days_ahead
         )
         min_slot_time = datetime.time.fromisoformat(booking.min_slot_time)
+        max_slot_time = (
+            datetime.time.fromisoformat(booking.max_slot_time)
+            if booking.max_slot_time
+            else None
+        )
 
         client = get_client(username=booking.username, password=booking.password)
 
@@ -35,18 +57,31 @@ def book_activity(booking: BookingConfig) -> None:
         )
         logger.info(f"[{booking.name}] Found {len(activity_times)} activity times")
 
+        # Filter by min_slot_time
         activity_times = [s for s in activity_times if s.start >= min_slot_time]
+
+        # Filter by max_slot_time (slot must end by max_slot_time)
+        if max_slot_time:
+            activity_times = [s for s in activity_times if s.end <= max_slot_time]
+
         logger.info(
             f"[{booking.name}] After filtering, got {len(activity_times)} activity times"
         )
 
-        if len(activity_times) < booking.n_slots:
+        # Find consecutive slots
+        consecutive_slots = find_consecutive_slots(activity_times, booking.n_slots)
+        if not consecutive_slots:
             raise NotEnoughSlotsFound(
-                f"[{booking.name}] Only got {len(activity_times)} activity_times, need {booking.n_slots}"
+                f"[{booking.name}] Could not find {booking.n_slots} consecutive slots"
             )
 
+        logger.info(
+            f"[{booking.name}] Found consecutive slots: "
+            f"{consecutive_slots[0].start} - {consecutive_slots[-1].end}"
+        )
+
         cart = None
-        for activity_time in activity_times[: booking.n_slots]:
+        for activity_time in consecutive_slots:
             slots = client.get_available_slots_for(
                 venue=booking.venue,
                 activity=booking.activity,

@@ -36,24 +36,27 @@ credentials: &credentials
   username: <BETTER_USERNAME>  # Reads from environment
   password: <BETTER_PASSWORD>  # Reads from environment
 
+# Note: Better venues typically open bookings at 22:00 (10 PM)
 bookings:
   - name: "Weekday evening badminton"
     <<: *credentials           # Merge shared credentials
     venue: queensbridge-sports-community-centre
     activity: badminton-40min
-    min_slot_time: "18:00:00"
-    n_slots: 2
-    days_ahead: 4
+    min_slot_time: "18:00:00"  # Book slots starting at 6 PM or later
+    max_slot_time: "21:00:00"  # Book slots ending by 9 PM
+    n_slots: 2                 # Book 2 consecutive 40-min slots (1h20 total)
+    days_ahead: 7              # Book 1 week in advance
     schedule: "0 22 * * 1-5"   # Cron: 10 PM, Mon-Fri
 
   - name: "Weekend badminton"
     <<: *credentials
     venue: britannia-leisure-centre
     activity: badminton-40min
-    min_slot_time: "10:00:00"
-    n_slots: 2
-    days_ahead: 4
-    schedule: "0 9 * * 6"      # Cron: 9 AM, Saturday
+    min_slot_time: "10:00:00"  # Book slots starting at 10 AM or later
+    max_slot_time: "14:00:00"  # Book slots ending by 2 PM
+    n_slots: 2                 # Book 2 consecutive 40-min slots (1h20 total)
+    days_ahead: 7              # Book 1 week in advance
+    schedule: "0 22 * * 5"     # Cron: 10 PM, Friday (for Saturday booking)
 ```
 
 ### Options
@@ -65,10 +68,11 @@ bookings:
 | `password` | Better account password (or `<ENV_VAR>`) | `<BETTER_PASSWORD>` |
 | `venue` | Venue slug | `queensbridge-sports-community-centre` |
 | `activity` | Activity slug | `badminton-40min` |
-| `min_slot_time` | Minimum time filter (HH:MM:SS) | `"18:00:00"` |
+| `min_slot_time` | Only book slots starting at this time or later | `"18:00:00"` |
+| `max_slot_time` | Only book slots ending by this time (optional) | `"21:00:00"` |
 | `n_slots` | Number of consecutive slots to book | `2` |
-| `days_ahead` | Days in advance to book | `4` |
-| `schedule` | Cron expression for scheduling | `"0 22 * * 1-5"` |
+| `days_ahead` | How many days in advance to book (e.g., 7 = 1 week) | `7` |
+| `schedule` | Cron expression for when to run the booking | `"0 22 * * 1-5"` |
 
 ### Environment Variable Substitution
 
