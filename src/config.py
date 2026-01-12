@@ -7,9 +7,8 @@ from pydantic import BaseModel, Field
 
 
 class BookingConfig(BaseModel):
-    """Configuration for a single booking job."""
+    """Config to book one activity."""
 
-    name: str = Field(description="Name of this booking job")
     username: str = Field(description="Better account username")
     password: str = Field(description="Better account password")
     venue: str = Field(description="Venue slug")
@@ -19,14 +18,20 @@ class BookingConfig(BaseModel):
         default=None, description="Maximum slot time (HH:MM:SS)"
     )
     n_slots: int = Field(default=1, description="Number of consecutive slots to book")
-    days_ahead: int = Field(default=4, description="Days ahead to book")
+
+
+class ScheduledBookingConfig(BookingConfig):
+    """Config for a scheduled booking job."""
+
+    name: str = Field(description="Name of this booking job")
     schedule: str = Field(description="Cron expression for scheduling")
+    days_ahead: int = Field(default=7, description="Days ahead to book")
 
 
 class AppConfig(BaseModel):
     """Application configuration."""
 
-    bookings: list[BookingConfig] = Field(default_factory=list)
+    bookings: list[ScheduledBookingConfig] = Field(default_factory=list)
 
 
 def substitute_env_vars(value: str) -> str:

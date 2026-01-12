@@ -1,15 +1,5 @@
-import enum
 import datetime
 from pydantic import BaseModel
-
-
-class BetterVenue(enum.StrEnum):
-    queensbridge = "queensbridge-sports-community-centre"
-    britania = "britannia-leisure-centre"
-
-
-class BetterActivity(enum.StrEnum):
-    badminton_40_mins = "badminton-40min"
 
 
 class ActivitySlot(BaseModel):

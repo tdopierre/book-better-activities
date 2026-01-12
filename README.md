@@ -14,6 +14,8 @@ An automated activity booking system for Better UK leisure facilities. This tool
 
 ## Quick Start
 
+### Scheduled Booking (runs continuously)
+
 1. Create a `config.yaml` file (see [Configuration](#configuration))
 
 2. Run with Docker:
@@ -25,6 +27,24 @@ An automated activity booking system for Better UK leisure facilities. This tool
      --name better-booker \
      ghcr.io/tdopierre/book-better-activities:latest
    ```
+
+### One-Shot Booking (runs once and exits)
+
+Book immediately without a config file:
+
+```bash
+docker run --rm \
+  -e BETTER_USERNAME=your_username \
+  -e BETTER_PASSWORD=your_password \
+  ghcr.io/tdopierre/book-better-activities:latest \
+  uv run python src/scripts/book-now.py \
+    --venue queensbridge-sports-community-centre \
+    --activity badminton-40min \
+    --date 2026-01-19 \
+    --min-slot-time 18:00:00 \
+    --max-slot-time 21:00:00 \
+    --n-slots 2
+```
 
 ## Configuration
 

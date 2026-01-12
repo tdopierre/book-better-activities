@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from src.config import load_config, BookingConfig
+from src.config import load_config, BookingConfig, ScheduledBookingConfig
 from src.clients.better_client import get_client
 from src.exceptions import NotEnoughSlotsFound
 
@@ -33,14 +33,15 @@ def find_consecutive_slots(activity_times: list, n_slots: int) -> list | None:
     return None
 
 
-def book_activity(booking: BookingConfig) -> None:
+def book_activity(
+    booking: BookingConfig,
+    activity_date: datetime.date,
+    name: str = "booking",
+) -> None:
     """Execute a single booking job."""
-    logger.info(f"Starting booking job: {booking.name}")
+    logger.info(f"Starting booking job: {name}")
 
     try:
-        activity_date = datetime.datetime.today() + datetime.timedelta(
-            days=booking.days_ahead
-        )
         min_slot_time = datetime.time.fromisoformat(booking.min_slot_time)
         max_slot_time = (
             datetime.time.fromisoformat(booking.max_slot_time)
@@ -56,9 +57,7 @@ def book_activity(booking: BookingConfig) -> None:
             activity_date=activity_date,
         )
         times_str = ", ".join(f"{t.start}-{t.end}" for t in activity_times)
-        logger.info(
-            f"[{booking.name}] Found {len(activity_times)} activity times: {times_str}"
-        )
+        logger.info(f"[{name}] Found {len(activity_times)} activity times: {times_str}")
 
         # Filter by min_slot_time
         activity_times = [s for s in activity_times if s.start >= min_slot_time]
@@ -69,18 +68,18 @@ def book_activity(booking: BookingConfig) -> None:
 
         times_str = ", ".join(f"{t.start}-{t.end}" for t in activity_times)
         logger.info(
-            f"[{booking.name}] After filtering, got {len(activity_times)} activity times: {times_str}"
+            f"[{name}] After filtering, got {len(activity_times)} activity times: {times_str}"
         )
 
         # Find consecutive slots
         consecutive_slots = find_consecutive_slots(activity_times, booking.n_slots)
         if not consecutive_slots:
             raise NotEnoughSlotsFound(
-                f"[{booking.name}] Could not find {booking.n_slots} consecutive slots"
+                f"[{name}] Could not find {booking.n_slots} consecutive slots"
             )
 
         logger.info(
-            f"[{booking.name}] Found consecutive slots: "
+            f"[{name}] Found consecutive slots: "
             f"{consecutive_slots[0].start} - {consecutive_slots[-1].end}"
         )
 
@@ -97,14 +96,26 @@ def book_activity(booking: BookingConfig) -> None:
 
         if cart:
             order_id = client.checkout_with_benefit(cart=cart)
-            logger.info(f"[{booking.name}] Successfully booked! Order ID: {order_id}")
+            logger.info(f"[{name}] Successfully booked! Order ID: {order_id}")
 
     except Exception as e:
-        logger.error(f"[{booking.name}] Booking failed: {e}")
+        logger.error(f"[{name}] Booking failed: {e}")
         raise
 
 
-def validate_credentials(bookings: list[BookingConfig]) -> None:
+def run_scheduled_booking(scheduled: ScheduledBookingConfig) -> None:
+    """Wrapper to run a scheduled booking."""
+    activity_date = datetime.date.today() + datetime.timedelta(
+        days=scheduled.days_ahead
+    )
+    book_activity(
+        booking=scheduled,
+        activity_date=activity_date,
+        name=scheduled.name,
+    )
+
+
+def validate_credentials(bookings: list[ScheduledBookingConfig]) -> None:
     """Validate all unique credential pairs at startup."""
     seen = set()
     for booking in bookings:
@@ -178,7 +189,7 @@ def main() -> None:
         trigger = CronTrigger(**cron_kwargs, timezone="Europe/London")
 
         scheduler.add_job(
-            book_activity,
+            run_scheduled_booking,
             trigger=trigger,
             args=[booking],
             id=booking.name,
