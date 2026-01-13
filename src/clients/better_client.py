@@ -43,16 +43,8 @@ def _requires_authentication[**P, R](
 
 class LiveBetterClient:
     HEADERS = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:146.0) Gecko/20100101 Firefox/146.0",
-        "Accept": "application/json",
-        "Accept-Language": "en-GB,en;q=0.5",
-        # 'Accept-Encoding': 'gzip, deflate, br, zstd',
-        "Content-Type": "application/json",
-        "Origin": "https://myaccount.better.org.uk",
-        "Connection": "keep-alive",
-        "Referer": "https://myaccount.better.org.uk/",
-        # Requests doesn't support trailers
-        # 'TE': 'trailers',
+        "Origin": "https://bookings.better.org.uk",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0",
     }
 
     def __init__(self, username: str, password: SecretStr):
