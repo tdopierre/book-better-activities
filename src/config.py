@@ -6,6 +6,12 @@ import yaml
 from pydantic import BaseModel, Field, SecretStr
 
 
+class DiscordBotConfig(BaseModel):
+    """Discord bot configuration."""
+
+    token: SecretStr = Field(description="Discord bot token")
+
+
 class BookingAttempt(BaseModel):
     """A single booking attempt configuration."""
 
@@ -44,7 +50,7 @@ class ScheduledBookingConfig(BaseModel):
         min_length=1,
         description="Ordered list of booking attempts (tries in order until one succeeds)",
     )
-    discord_webhook_url: str | None = Field(
+    discord_webhook_url: SecretStr | None = Field(
         default=None,
         description="Discord webhook URL for notifications (optional)",
     )
@@ -54,6 +60,7 @@ class AppConfig(BaseModel):
     """Application configuration."""
 
     bookings: list[ScheduledBookingConfig] = Field(default_factory=list)
+    discord_bot: DiscordBotConfig | None = Field(default=None)
 
 
 def substitute_env_vars(value: str) -> str:

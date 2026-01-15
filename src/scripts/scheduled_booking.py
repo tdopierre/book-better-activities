@@ -1,13 +1,9 @@
 import datetime
 import logging
-from zoneinfo import ZoneInfo
 
-from apscheduler.schedulers.blocking import BlockingScheduler
-from apscheduler.triggers.cron import CronTrigger
-
-from src.config import load_config, ScheduledBookingConfig
-from src.clients.better_client import get_client
 from src.booking import execute_booking_with_fallback
+from src.clients.better_client import get_client
+from src.config import ScheduledBookingConfig
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -21,11 +17,16 @@ def run_scheduled_booking(scheduled: ScheduledBookingConfig) -> None:
     activity_date = datetime.date.today() + datetime.timedelta(
         days=scheduled.days_ahead
     )
+    webhook_url = (
+        scheduled.discord_webhook_url.get_secret_value()
+        if scheduled.discord_webhook_url
+        else None
+    )
     execute_booking_with_fallback(
         attempts=scheduled.attempts,
         activity_date=activity_date,
         job_name=scheduled.name,
-        discord_webhook_url=scheduled.discord_webhook_url,
+        discord_webhook_url=webhook_url,
     )
 
 
@@ -87,42 +88,3 @@ def parse_cron_expression(cron_expr: str) -> dict:
         "month": month,
         "day_of_week": convert_cron_dow_to_apscheduler(day_of_week),
     }
-
-
-def main() -> None:
-    """Main entry point - load config and start scheduler."""
-    config = load_config()
-
-    if not config.bookings:
-        logger.warning("No bookings configured in config.yaml")
-        return
-
-    # Validate credentials before starting scheduler
-    validate_credentials(config.bookings)
-
-    scheduler = BlockingScheduler()
-
-    for booking in config.bookings:
-        cron_kwargs = parse_cron_expression(booking.schedule)
-        trigger = CronTrigger(**cron_kwargs, timezone="Europe/London")
-
-        scheduler.add_job(
-            run_scheduled_booking,
-            trigger=trigger,
-            args=[booking],
-            id=booking.name,
-            name=booking.name,
-        )
-        now = datetime.datetime.now(ZoneInfo("Europe/London"))
-        next_run = trigger.get_next_fire_time(None, now)
-        booking_date = next_run.date() + datetime.timedelta(days=booking.days_ahead)
-        logger.info(
-            f"Scheduled job: {booking.name} (next run: {next_run}, booking for: {booking_date})"
-        )
-
-    logger.info(f"Starting scheduler with {len(config.bookings)} job(s)")
-    scheduler.start()
-
-
-if __name__ == "__main__":
-    main()
