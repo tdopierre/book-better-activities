@@ -15,7 +15,13 @@ discord_bot:
 
 badminton40minDouble: &badminton40minDouble
   activity: badminton-40min
-  min_slot_time: "17:20:00"
+  min_slot_time: "17:00:00"
+  max_slot_time: "21:00:00"
+  n_slots: 2
+
+badminton60minDouble: &badminton60minDouble
+  activity: badminton-60min
+  min_slot_time: "17:00:00"
   max_slot_time: "21:00:00"
   n_slots: 2
 
@@ -33,12 +39,17 @@ bookings:
         <<: *badminton40minDouble
         venue: queensbridge-sports-community-centre
 
-      # Fallback 1: Britania
+      # Fallback 1: Britania 2x40min
       - <<: *credentials
         <<: *badminton40minDouble
         venue: britannia-leisure-centre
 
-      # Fallback 2: Clissold
+      # Fallback 2: Britania 2x60min
+      - <<: *credentials
+        <<: *badminton60minDouble
+        venue: britannia-leisure-centre
+
+      # Fallback 3: Clissold
       - <<: *credentials
         <<: *badminton40minDouble
         venue: clissold-leisure-centre
