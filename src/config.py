@@ -6,6 +6,20 @@ import yaml
 from pydantic import BaseModel, Field, SecretStr
 
 
+class BookingAttempt(BaseModel):
+    """A single booking attempt configuration."""
+
+    username: str = Field(description="Better account username")
+    password: SecretStr = Field(description="Better account password")
+    venue: str = Field(description="Venue slug")
+    activity: str = Field(description="Activity slug")
+    min_slot_time: str = Field(description="Minimum slot time (HH:MM:SS)")
+    max_slot_time: str | None = Field(
+        default=None, description="Maximum slot time (HH:MM:SS)"
+    )
+    n_slots: int = Field(default=1, description="Number of consecutive slots to book")
+
+
 class BookingConfig(BaseModel):
     """Config to book one activity."""
 
@@ -20,12 +34,16 @@ class BookingConfig(BaseModel):
     n_slots: int = Field(default=1, description="Number of consecutive slots to book")
 
 
-class ScheduledBookingConfig(BookingConfig):
-    """Config for a scheduled booking job."""
+class ScheduledBookingConfig(BaseModel):
+    """Config for a scheduled booking job with multiple fallback attempts."""
 
     name: str = Field(description="Name of this booking job")
     schedule: str = Field(description="Cron expression for scheduling")
     days_ahead: int = Field(default=7, description="Days ahead to book")
+    attempts: list[BookingAttempt] = Field(
+        min_length=1,
+        description="Ordered list of booking attempts (tries in order until one succeeds)",
+    )
 
 
 class AppConfig(BaseModel):

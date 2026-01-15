@@ -7,7 +7,7 @@ from apscheduler.triggers.cron import CronTrigger
 
 from src.config import load_config, ScheduledBookingConfig
 from src.clients.better_client import get_client
-from src.booking import book_activity_slots
+from src.booking import execute_booking_with_fallback
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -17,30 +17,34 @@ logging.basicConfig(
 
 
 def run_scheduled_booking(scheduled: ScheduledBookingConfig) -> None:
-    """Wrapper to run a scheduled booking."""
+    """Wrapper to run a scheduled booking with fallback attempts."""
     activity_date = datetime.date.today() + datetime.timedelta(
         days=scheduled.days_ahead
     )
-    book_activity_slots(
-        booking=scheduled,
+    execute_booking_with_fallback(
+        attempts=scheduled.attempts,
         activity_date=activity_date,
-        name=scheduled.name,
+        job_name=scheduled.name,
     )
 
 
 def validate_credentials(bookings: list[ScheduledBookingConfig]) -> None:
-    """Validate all unique credential pairs at startup."""
+    """Validate all unique credential pairs across all booking attempts."""
     seen = set()
     for booking in bookings:
-        key = (booking.username, booking.password)
-        if key in seen:
-            continue
-        seen.add(key)
+        for attempt in booking.attempts:
+            key = (attempt.username, attempt.password.get_secret_value())
+            if key in seen:
+                continue
+            seen.add(key)
 
-        logger.info(f"Validating credentials for {booking.username}...")
-        client = get_client(username=booking.username, password=booking.password)
-        client.authenticate()
-        logger.info(f"Credentials valid for {booking.username}")
+            logger.info(f"Validating credentials for {attempt.username}...")
+            client = get_client(
+                username=attempt.username,
+                password=attempt.password.get_secret_value(),
+            )
+            client.authenticate()
+            logger.info(f"✓ Credentials valid for {attempt.username}")
 
 
 def convert_cron_dow_to_apscheduler(dow: str) -> str:

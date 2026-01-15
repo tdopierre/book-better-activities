@@ -7,24 +7,51 @@ credentials: &credentials
   password: <BETTER_PASSWORD>
 
 bookings:
-  # Weekday evening badminton at Queensbridge
+  # Weekday evening badminton with fallback options
   - name: "Weekday evening badminton"
-    <<: *credentials
-    venue: queensbridge-sports-community-centre
-    activity: badminton-40min
-    min_slot_time: "18:00:00"
-    max_slot_time: "21:00:00"
-    n_slots: 2
     days_ahead: 7
     schedule: "0 22 * * 1-5"  # 10 PM, Monday-Friday
+    attempts:
+      # First choice: Queensbridge, 2 slots, 6-9 PM
+      - <<: *credentials
+        venue: queensbridge-sports-community-centre
+        activity: badminton-40min
+        min_slot_time: "18:00:00"
+        max_slot_time: "21:00:00"
+        n_slots: 2
 
-  # Example: Weekend morning session at Britannia
+      # Fallback 1: Same venue/activity, accept 1 slot if 2 not available
+      - <<: *credentials
+        venue: queensbridge-sports-community-centre
+        activity: badminton-40min
+        min_slot_time: "18:00:00"
+        max_slot_time: "21:00:00"
+        n_slots: 1
+
+      # Fallback 2: Try earlier time window (5-9 PM), 2 slots
+      - <<: *credentials
+        venue: queensbridge-sports-community-centre
+        activity: badminton-40min
+        min_slot_time: "17:00:00"
+        max_slot_time: "21:00:00"
+        n_slots: 2
+
+      # Fallback 3: Different venue (Britannia)
+      - <<: *credentials
+        venue: britannia-leisure-centre
+        activity: badminton-40min
+        min_slot_time: "18:00:00"
+        max_slot_time: "21:00:00"
+        n_slots: 2
+
+  # Example: Single-attempt booking (simplest case)
   # - name: "Weekend badminton"
-  #   <<: *credentials
-  #   venue: britannia-leisure-centre
-  #   activity: badminton-40min
-  #   min_slot_time: "10:00:00"
-  #   max_slot_time: "12:00:00"
-  #   n_slots: 2
   #   days_ahead: 4
   #   schedule: "0 9 * * 6"  # 9 AM, Saturday
+  #   attempts:
+  #     - <<: *credentials
+  #       venue: britannia-leisure-centre
+  #       activity: badminton-40min
+  #       min_slot_time: "10:00:00"
+  #       max_slot_time: "12:00:00"
+  #       n_slots: 2
