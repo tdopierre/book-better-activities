@@ -38,16 +38,31 @@ def send_discord_notification(webhook_url: str, message: str, color: int) -> Non
 
 
 def send_success_notification(
-    webhook_url: str | None, job_name: str, attempt_num: int, order_id: str
+    webhook_url: str | None,
+    job_name: str,
+    attempt_num: int,
+    order_id: str,
+    venue: str,
+    activity: str,
+    slots: list,
 ) -> None:
     """Send a success notification to Discord."""
     if not webhook_url:
         return
 
+    # Format slots information
+    slots_info = "\n".join(f"• {slot.start} - {slot.end}" for slot in slots)
+
+    # Format venue name (replace hyphens with spaces and capitalize)
+    venue_display = venue.replace("-", " ").title()
+
     message = (
         f"**Booking Successful!** ✅\n\n"
         f"**Job:** {job_name}\n"
         f"**Attempt:** {attempt_num}\n"
+        f"**Venue:** {venue_display}\n"
+        f"**Activity:** {activity}\n"
+        f"**Slots:**\n{slots_info}\n\n"
         f"**Order ID:** {order_id}"
     )
 

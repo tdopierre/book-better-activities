@@ -180,7 +180,13 @@ def execute_single_attempt(
     Execute a single booking attempt.
 
     Returns:
-        dict with keys: 'success' (bool), 'order_id' (str|None), 'error' (Exception|None)
+        dict with keys:
+        - 'success' (bool)
+        - 'order_id' (str|None)
+        - 'error' (Exception|None)
+        - 'venue' (str|None) - only present if success=True
+        - 'activity' (str|None) - only present if success=True
+        - 'slots' (list|None) - ActivityTime objects, only present if success=True
     """
     log_attempt_start(attempt_number, total_attempts, attempt)
 
@@ -236,7 +242,14 @@ def execute_single_attempt(
         )
         order_id = complete_booking(client=client, slots=slots)
 
-        return {"success": True, "order_id": order_id, "error": None}
+        return {
+            "success": True,
+            "order_id": order_id,
+            "error": None,
+            "venue": attempt.venue,
+            "activity": attempt.activity,
+            "slots": consecutive,
+        }
 
     except Exception as e:
         return {"success": False, "order_id": None, "error": e}
@@ -279,7 +292,13 @@ def execute_booking_with_fallback(
             log_attempt_success(job_name, attempt_num, result["order_id"])
             # Send success notification to Discord
             send_success_notification(
-                discord_webhook_url, job_name, attempt_num, result["order_id"]
+                webhook_url=discord_webhook_url,
+                job_name=job_name,
+                attempt_num=attempt_num,
+                order_id=result["order_id"],
+                venue=result["venue"],
+                activity=result["activity"],
+                slots=result["slots"],
             )
             return result["order_id"]
         else:
