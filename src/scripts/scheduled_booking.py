@@ -42,7 +42,7 @@ def validate_credentials(bookings: list[ScheduledBookingConfig]) -> None:
             logger.info(f"Validating credentials for {attempt.username}...")
             client = get_client(
                 username=attempt.username,
-                password=attempt.password.get_secret_value(),
+                password=attempt.password,  # Pass SecretStr directly
             )
             client.authenticate()
             logger.info(f"✓ Credentials valid for {attempt.username}")
