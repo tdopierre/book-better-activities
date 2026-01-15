@@ -17,4 +17,4 @@ COPY config.yaml ./
 ENV PYTHONPATH="/app"
 
 # Run the scheduler
-CMD ["uv", "run", "python", "src/scripts/scheduled_booking.py"]
+CMD ["uv", "run", "python", "src/main.py"]
