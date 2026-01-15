@@ -25,6 +25,7 @@ def run_scheduled_booking(scheduled: ScheduledBookingConfig) -> None:
         attempts=scheduled.attempts,
         activity_date=activity_date,
         job_name=scheduled.name,
+        discord_webhook_url=scheduled.discord_webhook_url,
     )
 
 

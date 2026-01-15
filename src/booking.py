@@ -4,6 +4,7 @@ import logging
 from src.config import BookingConfig
 from src.clients.better_client import get_client
 from src.exceptions import AllBookingAttemptsFailed, NotEnoughSlotsFound
+from src.notifications import send_failure_notification, send_success_notification
 
 logger = logging.getLogger(__name__)
 
@@ -245,9 +246,16 @@ def execute_booking_with_fallback(
     attempts: list,
     activity_date: datetime.date,
     job_name: str,
+    discord_webhook_url: str | None = None,
 ) -> str:
     """
     Try booking attempts in order until one succeeds.
+
+    Args:
+        attempts: List of booking attempts to try
+        activity_date: Date to book for
+        job_name: Name of the booking job
+        discord_webhook_url: Optional Discord webhook URL for notifications
 
     Returns:
         order_id of successful booking
@@ -269,6 +277,10 @@ def execute_booking_with_fallback(
 
         if result["success"]:
             log_attempt_success(job_name, attempt_num, result["order_id"])
+            # Send success notification to Discord
+            send_success_notification(
+                discord_webhook_url, job_name, attempt_num, result["order_id"]
+            )
             return result["order_id"]
         else:
             log_attempt_failure(job_name, attempt_num, result["error"])
@@ -278,4 +290,6 @@ def execute_booking_with_fallback(
     logger.error(
         f"[{job_name}] All {len(attempts)} attempt(s) failed. No booking made."
     )
+    # Send failure notification to Discord
+    send_failure_notification(discord_webhook_url, job_name, len(attempts), all_errors)
     raise AllBookingAttemptsFailed(job_name, all_errors)

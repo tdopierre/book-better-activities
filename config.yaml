@@ -1,5 +1,9 @@
 # Book Better Activities Configuration
 # Environment variables can be referenced using <ENV_VAR> syntax
+#
+# Discord Notifications:
+# To get a webhook URL: Server Settings > Integrations > Webhooks > New Webhook
+# Then set the DISCORD_WEBHOOK_URL environment variable or paste the URL directly
 
 # Shared credentials (use YAML anchors for reuse)
 credentials: &credentials
@@ -11,6 +15,7 @@ bookings:
   - name: "Weekday evening badminton"
     days_ahead: 7
     schedule: "0 22 * * 1-5"  # 10 PM, Monday-Friday
+    discord_webhook_url: <DISCORD_WEBHOOK_URL>  # Optional: Discord webhook for notifications
     attempts:
       # First choice: Queensbridge, 2 slots, 6-9 PM
       - <<: *credentials

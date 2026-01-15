@@ -44,6 +44,10 @@ class ScheduledBookingConfig(BaseModel):
         min_length=1,
         description="Ordered list of booking attempts (tries in order until one succeeds)",
     )
+    discord_webhook_url: str | None = Field(
+        default=None,
+        description="Discord webhook URL for notifications (optional)",
+    )
 
 
 class AppConfig(BaseModel):
