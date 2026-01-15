@@ -47,6 +47,26 @@ docker run --rm --env-file .env \
     --n-slots 2
 ```
 
+### List Your Bookings
+
+View your existing bookings:
+
+```bash
+docker run --rm --env-file .env \
+  ghcr.io/tdopierre/book-better-activities:latest \
+  uv run python -m src.scripts.list_bookings
+
+# List past bookings
+docker run --rm --env-file .env \
+  ghcr.io/tdopierre/book-better-activities:latest \
+  uv run python -m src.scripts.list_bookings --filter past
+
+# List all bookings
+docker run --rm --env-file .env \
+  ghcr.io/tdopierre/book-better-activities:latest \
+  uv run python -m src.scripts.list_bookings --filter all
+```
+
 ## Configuration
 
 Create a `config.yaml` file to define your booking jobs with fallback attempts:
@@ -261,6 +281,7 @@ book-better-activities/
     ├── notifications.py         # Discord notification functions
     ├── scripts/
     │   ├── book_now.py          # One-shot booking script
+    │   ├── list_bookings.py     # List your bookings script
     │   ├── list_slots.py        # List available slots script
     │   └── scheduled_booking.py # Main scheduler entry point
     └── __init__.py              # Python package initializer

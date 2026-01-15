@@ -25,3 +25,34 @@ class ActivityCart(BaseModel):
     id: int
     amount: int
     source: str
+
+
+class BookingLocation(BaseModel):
+    id: str
+    name: str
+    type: str
+    slug: str
+    venue_id: int
+    venue_slug: str
+
+
+class BookingItem(BaseModel):
+    duration: str
+    location: BookingLocation
+
+
+class Booking(BaseModel):
+    id: int
+    can_be_cancelled: bool
+    status: str
+    category: str
+    venue: str
+    venue_name: str
+    simple_name: str
+    price: str
+    date: str
+    time: str
+    description: str
+    order_id: int
+    activity_id: int
+    item: BookingItem

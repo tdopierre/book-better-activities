@@ -13,6 +13,7 @@ from src.models import (
     ActivityCart,
     ActivitySlot,
     ActivityTime,
+    Booking,
 )
 
 type _LiveBetterClientInstanceMethod[**P, R] = Callable[
@@ -211,6 +212,26 @@ class LiveBetterClient:
         complete_checkout_response.raise_for_status()
 
         return complete_checkout_response.json()["complete_order_id"]
+
+    @_requires_authentication
+    def get_my_bookings(self, filter: str = "future") -> list[Booking]:
+        """
+        Get user's bookings.
+
+        Args:
+            filter: Filter type - "future", "past", or "all" (default: "future")
+
+        Returns:
+            List of Booking objects
+        """
+        response = self.client.get(
+            "my-account/bookings",
+            params={"filter": filter},
+        )
+        response.raise_for_status()
+
+        data = response.json()["data"]
+        return [Booking(**booking) for booking in data]
 
 
 def get_client(username: str, password: SecretStr) -> LiveBetterClient:
