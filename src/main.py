@@ -67,17 +67,34 @@ async def list_bookings(interaction: discord.Interaction):
             await interaction.followup.send("You have no upcoming bookings.")
             return
 
-        embed = discord.Embed(
-            title="Upcoming Bookings",
-            color=discord.Color.blue(),
-        )
+        # Build a formatted table
+        table_rows = []
+        header = f"{'Activity':<15} {'Location':<40} {'Date':<12} {'Time':<8}"
+        separator = "─" * len(header)
+
+        table_rows.append(header)
+        table_rows.append(separator)
+
         for booking in bookings:
-            embed.add_field(
-                name=f"{booking.simple_name} at {booking.venue}",
-                value=f"**ID:** {booking.id}\n**Date:** {booking.date}\n**Time:** {booking.time}",
-                inline=False,
+            activity = booking.simple_name[:14]
+            location = booking.item.location.name[:39]
+            date = booking.date.strftime("%Y-%m-%d")
+            time = str(booking.time)
+
+            row = f"{activity:<15} {location:<40} {date:<12} {time:<8}"
+            table_rows.append(row)
+
+        table_text = "\n".join(table_rows)
+        message = f"**Upcoming Bookings ({len(bookings)})**\n```\n{table_text}\n```"
+
+        # Discord has a 2000 character limit per message
+        if len(message) > 2000:
+            await interaction.followup.send(
+                f"You have {len(bookings)} upcoming bookings, but the list is too large to display. "
+                "Consider filtering or pagination."
             )
-        await interaction.followup.send(embed=embed)
+        else:
+            await interaction.followup.send(message)
 
     except Exception as e:
         logger.error(f"Error listing bookings: {e}", exc_info=True)

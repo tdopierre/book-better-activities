@@ -1,5 +1,5 @@
 import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class ActivitySlot(BaseModel):
@@ -50,9 +50,19 @@ class Booking(BaseModel):
     venue_name: str
     simple_name: str
     price: str
-    date: str
+    date: datetime.date
     time: str
     description: str
     order_id: int
     activity_id: int
     item: BookingItem
+
+    @field_validator("date", mode="before")
+    @classmethod
+    def parse_date(cls, v):
+        if isinstance(v, datetime.date):
+            return v
+        if isinstance(v, str):
+            # Parse format like "Wed 21 January 2026"
+            return datetime.datetime.strptime(v, "%a %d %B %Y").date()
+        return v
