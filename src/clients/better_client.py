@@ -98,13 +98,15 @@ class LiveBetterClient:
         activity_date: datetime.date,
         start_time: datetime.time,
         end_time: datetime.time,
+        composite_key: str,
     ) -> list[ActivitySlot]:
         response = self.client.get(
-            f"activities/venue/{venue}/activity/{activity}/slots",
+            f"activities/venue/{venue}/activity/{activity}/v2/slots",
             params={
                 "date": activity_date.strftime("%Y-%m-%d"),
                 "start_time": start_time.strftime("%H:%M"),
                 "end_time": end_time.strftime("%H:%M"),
+                "composite_key": composite_key,
             },
         )
         response.raise_for_status()
@@ -128,7 +130,7 @@ class LiveBetterClient:
         self, venue: str, activity: str, activity_date: datetime.date
     ) -> list[ActivityTime]:
         response = self.client.get(
-            f"activities/venue/{venue}/activity/{activity}/times",
+            f"activities/venue/{venue}/activity/{activity}/v2/times",
             params={"date": activity_date.strftime("%Y-%m-%d")},
         )
         response.raise_for_status()
@@ -148,6 +150,7 @@ class LiveBetterClient:
                 spaces=time_["spaces"],
                 price=time_["price"]["formatted_amount"],
                 duration=time_["duration"],
+                composite_key=time_["composite_key"],
             )
             for time_ in data
             if time_["spaces"] > 0 and time_["booking"] is None
@@ -180,6 +183,7 @@ class LiveBetterClient:
             id=data["id"],
             amount=data["total"],
             source=data["source"],
+            item_hash=data["itemHash"],
         )
 
     @_requires_authentication
@@ -195,7 +199,7 @@ class LiveBetterClient:
                 },
             )
             apply_credits_response.raise_for_status()
-            payments = [{"tender_type": "credit", "amount": cart.amount}]
+            payments = [{"tender_type": "credit", "amount": cart.amount, "info": {}}]
         else:
             payments = []
 
@@ -207,6 +211,7 @@ class LiveBetterClient:
                 selected_user_id=None,
                 source=cart.source,
                 terms=[1],
+                item_hash=cart.item_hash,
             ),
         )
         complete_checkout_response.raise_for_status()

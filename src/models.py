@@ -3,8 +3,8 @@ from pydantic import BaseModel, field_validator
 
 
 class ActivitySlot(BaseModel):
-    id: int
-    location_id: int
+    id: str
+    location_id: str
     pricing_option_id: int
     restriction_ids: list[int]
     name: str
@@ -19,12 +19,14 @@ class ActivityTime(BaseModel):
     spaces: int
     price: str | None
     duration: str
+    composite_key: str
 
 
 class ActivityCart(BaseModel):
     id: int
     amount: int
     source: str
+    item_hash: str
 
 
 class BookingLocation(BaseModel):

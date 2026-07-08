@@ -46,6 +46,7 @@ def convert_times_to_slots(
             activity_date=activity_date,
             start_time=activity_time.start,
             end_time=activity_time.end,
+            composite_key=activity_time.composite_key,
         )
         slots.append(slot_list[0])
     return slots
@@ -157,6 +158,7 @@ def book_activity_slots(
                 activity_date=activity_date,
                 start_time=activity_time.start,
                 end_time=activity_time.end,
+                composite_key=activity_time.composite_key,
             )
             slots_to_book.append(slots[0])
 
